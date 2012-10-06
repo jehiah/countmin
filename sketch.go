@@ -26,7 +26,7 @@ type countMinSketch struct {
 
 // Create a new Sketch. Settings for hashes and columns affect performance
 // of Adding and Querying items, but also accuracy.
-func NewcountMinSketch(hashes int, columns int) Sketch {
+func NewCountMinSketch(hashes int, columns int) Sketch {
 	s := countMinSketch{
 		Hashes:  hashes,
 		Columns: uint32(columns),

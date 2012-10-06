@@ -13,7 +13,7 @@ func TestBasicSketch(t *testing.T) {
 	log.SetOutput(ioutil.Discard)
 	log.SetOutput(os.Stdout)
 
-	s := NewcountMinSketch(7, 2000)
+	s := NewCountMinSketch(7, 2000)
 	iterations := 5500
 	var diverged int
 	for i := 1; i < iterations; i += 1 {
