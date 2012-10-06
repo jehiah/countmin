@@ -3,56 +3,63 @@ package countmin
 import (
 	"hash/crc32"
 	"hash/fnv"
+	// "log"
 	"encoding/binary"
 )
 
 type Sketch interface {
-	Add([]byte, int64)
-	Query([]byte) int64
-	AddString(string, int64)
-	QueryString(string) int64
+	Add([]byte, uint32) uint32
+	Query([]byte) uint32
+	AddString(string, uint32) uint32
+	QueryString(string) uint32
 }
 
 type CountMinSketch struct {
 	Hashes  int
 	Columns uint32
-	Data    [][]int64
+	Data    [][]uint32
 }
 
 func NewCountMinSketch(hashes int, columns int) Sketch {
 	s := CountMinSketch{
 		Hashes:  hashes,
 		Columns: uint32(columns),
-		Data:    make([][]int64, hashes),
+		Data:    make([][]uint32, hashes),
 	}
 	for i, _ := range s.Data {
-		s.Data[i] = make([]int64, columns)
+		s.Data[i] = make([]uint32, columns)
 	}
 	return &s
 }
 
-func (s *CountMinSketch) AddString(key string, count int64) {
-	s.Add([]byte(key), count)
+func (s *CountMinSketch) AddString(key string, count uint32) uint32 {
+	return s.Add([]byte(key), count)
 }
-func (s *CountMinSketch) QueryString(key string) int64 {
+func (s *CountMinSketch) QueryString(key string) uint32 {
 	return s.Query([]byte(key))
 }
 
-func (s *CountMinSketch) Add(key []byte, count int64) {
+func (s *CountMinSketch) Add(key []byte, count uint32) uint32 {
+	// this is a bad implementation because we hash all twice in worst case.
+	newValue := s.Query(key) + count
 	h := fnv.New64a()
 	h.Write(key)
 	var b []byte
 	for i := 0; i < s.Hashes; i += 1 {
 		binary.Write(h, binary.LittleEndian, uint32(i))
 		index := crc32.ChecksumIEEE(h.Sum(b)) % s.Columns
-		s.Data[i][index] += count
+		if s.Data[i][index] <= newValue {
+			s.Data[i][index] = newValue
+			// log.Printf("%s - [%d][%d] = %d", key, i, index, s.Data[i][index])
+		}
 	}
+	return newValue
 }
 
-func (s *CountMinSketch) Query(key []byte) int64 {
+func (s *CountMinSketch) Query(key []byte) uint32 {
 	h := fnv.New64a()
 	h.Write(key)
-	var min int64
+	var min uint32
 	var b []byte
 	for i := 0; i < s.Hashes; i += 1 {
 		binary.Write(h, binary.LittleEndian, uint32(i))
