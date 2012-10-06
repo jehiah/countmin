@@ -1,10 +1,14 @@
+/*
+Count-Min Sketch, an approximate counting data structure for summarizing data streams
+
+for more information see http://github.com/jehiah/countmin
+*/
 package countmin
 
 import (
+	"encoding/binary"
 	"hash/crc32"
 	"hash/fnv"
-	// "log"
-	"encoding/binary"
 )
 
 type Sketch interface {
@@ -14,14 +18,16 @@ type Sketch interface {
 	QueryString(string) uint32
 }
 
-type CountMinSketch struct {
+type countMinSketch struct {
 	Hashes  int
 	Columns uint32
 	Data    [][]uint32
 }
 
-func NewCountMinSketch(hashes int, columns int) Sketch {
-	s := CountMinSketch{
+// Create a new Sketch. Settings for hashes and columns affect performance
+// of Adding and Querying items, but also accuracy.
+func NewcountMinSketch(hashes int, columns int) Sketch {
+	s := countMinSketch{
 		Hashes:  hashes,
 		Columns: uint32(columns),
 		Data:    make([][]uint32, hashes),
@@ -32,15 +38,15 @@ func NewCountMinSketch(hashes int, columns int) Sketch {
 	return &s
 }
 
-func (s *CountMinSketch) AddString(key string, count uint32) uint32 {
+func (s *countMinSketch) AddString(key string, count uint32) uint32 {
 	return s.Add([]byte(key), count)
 }
-func (s *CountMinSketch) QueryString(key string) uint32 {
+func (s *countMinSketch) QueryString(key string) uint32 {
 	return s.Query([]byte(key))
 }
 
-func (s *CountMinSketch) Add(key []byte, count uint32) uint32 {
-	// this is a bad implementation because we hash all twice in worst case.
+func (s *countMinSketch) Add(key []byte, count uint32) uint32 {
+	// TODO: this is a bad implementation because we hash all twice in worst case.
 	newValue := s.Query(key) + count
 	h := fnv.New64a()
 	h.Write(key)
@@ -50,13 +56,12 @@ func (s *CountMinSketch) Add(key []byte, count uint32) uint32 {
 		index := crc32.ChecksumIEEE(h.Sum(b)) % s.Columns
 		if s.Data[i][index] <= newValue {
 			s.Data[i][index] = newValue
-			// log.Printf("%s - [%d][%d] = %d", key, i, index, s.Data[i][index])
 		}
 	}
 	return newValue
 }
 
-func (s *CountMinSketch) Query(key []byte) uint32 {
+func (s *countMinSketch) Query(key []byte) uint32 {
 	h := fnv.New64a()
 	h.Write(key)
 	var min uint32

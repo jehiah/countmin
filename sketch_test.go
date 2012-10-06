@@ -13,7 +13,7 @@ func TestBasicSketch(t *testing.T) {
 	log.SetOutput(ioutil.Discard)
 	log.SetOutput(os.Stdout)
 
-	s := NewCountMinSketch(7, 2000)
+	s := NewcountMinSketch(7, 2000)
 	iterations := 5500
 	var diverged int
 	for i := 1; i < iterations; i += 1 {
@@ -30,13 +30,8 @@ func TestBasicSketch(t *testing.T) {
 		v := s.QueryString(strconv.Itoa(i))
 		assert.Equal(t, v >= v, true)
 		if v != vv {
-			log.Printf("[%d] got %d expected %d", i, v, vv)
 			miss += 1
 		}
 	}
 	log.Printf("missed %d of %d (%d diverged during adds)", miss, iterations, diverged)
-	
-	ss := s.(*CountMinSketch)
-	log.Printf("row 0 = %v", ss.Data[0])
 }
-
