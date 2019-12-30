@@ -30,7 +30,7 @@ func NewCountMinSketch(hashes int, columns int) Sketch {
 	s := countMinSketch{
 		Hashes:  hashes,
 		Columns: columns,
-		Data:    make([]uint32, hashes * columns),
+		Data:    make([]uint32, hashes*columns),
 	}
 	return &s
 }
@@ -49,11 +49,11 @@ func (s *countMinSketch) Add(key []byte, count uint32) uint32 {
 	h.Write(key)
 	columns := uint32(s.Columns)
 	var b []byte
-	for base := uint32(0); base < uint32(s.Hashes) * columns; base += columns {
+	for base := uint32(0); base < uint32(s.Hashes)*columns; base += columns {
 		binary.Write(h, binary.LittleEndian, uint32(base))
 		index := crc32.ChecksumIEEE(h.Sum(b)) % columns
-		if s.Data[base + index] <= newValue {
-			s.Data[base + index] = newValue
+		if s.Data[base+index] <= newValue {
+			s.Data[base+index] = newValue
 		}
 	}
 	return newValue
@@ -65,10 +65,10 @@ func (s *countMinSketch) Query(key []byte) uint32 {
 	var min uint32
 	var b []byte
 	columns := uint32(s.Columns)
-	for base := uint32(0); base < uint32(s.Hashes) * columns; base += columns {
+	for base := uint32(0); base < uint32(s.Hashes)*columns; base += columns {
 		binary.Write(h, binary.LittleEndian, uint32(base))
 		index := crc32.ChecksumIEEE(h.Sum(b)) % columns
-		v := s.Data[base + index]
+		v := s.Data[base+index]
 		if base == 0 || v < min {
 			min = v
 		}

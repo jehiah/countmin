@@ -1,7 +1,6 @@
 package countmin
 
 import (
-	"github.com/bmizerany/assert"
 	"io/ioutil"
 	"log"
 	"os"
@@ -18,7 +17,8 @@ func TestBasicSketch(t *testing.T) {
 	var diverged int
 	for i := 1; i < iterations; i += 1 {
 		v := uint32(i % 50)
-		vv := s.AddString(strconv.Itoa(i), v)
+		key := strconv.Itoa(i)
+		vv := s.AddString(key, v)
 		if vv > v {
 			diverged += 1
 		}
@@ -26,12 +26,13 @@ func TestBasicSketch(t *testing.T) {
 
 	var miss int
 	for i := 1; i < iterations; i += 1 {
-		vv := uint32(i % 50)
-		v := s.QueryString(strconv.Itoa(i))
-		assert.Equal(t, v >= v, true)
-		if v != vv {
+		expected := uint32(i % 50)
+		key := strconv.Itoa(i)
+		got := s.QueryString(key)
+		if got != expected {
+			t.Logf("missed got %d expected %d", got, expected)
 			miss += 1
 		}
 	}
-	log.Printf("missed %d of %d (%d diverged during adds)", miss, iterations, diverged)
+	t.Logf("missed %d of %d (%d diverged during adds)", miss, iterations, diverged)
 }

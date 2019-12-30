@@ -1,4 +1,7 @@
 language: go
-install:
-  - go get github.com/bmizerany/assert
+go:
+  - 1.x
+sudo: false
+notifications:
+  email: false
 
